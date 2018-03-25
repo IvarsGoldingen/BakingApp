@@ -112,7 +112,7 @@ implements RecipeDetailsFragment.OnItemClickListener{
         int [] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(this, IngredientsWidgetProvider.class));
         IngredientsWidgetProvider.updateRecipeWidgets(this, appWidgetManager,
                 appWidgetIds,receivedRecipe);
-        appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widget_list_view);
+        //appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widget_list_view);
     }
 
     @Override

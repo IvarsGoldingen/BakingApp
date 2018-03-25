@@ -41,7 +41,6 @@ public class IngredientsWidgetProvider extends AppWidgetProvider {
 
             //The list must be put into a bundle to be passed through multiple intents
             Bundle extrasBundle = new Bundle();
-            
             extrasBundle.putSerializable(INGREDIENTS_LIST_EXTRA, receivedRecipe);
             listIntent.putExtra(BUNDLE_EXTRA, extrasBundle);
         }

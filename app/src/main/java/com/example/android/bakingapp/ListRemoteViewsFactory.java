@@ -30,11 +30,9 @@ public class ListRemoteViewsFactory implements RemoteViewsService.RemoteViewsFac
 
     Context mContext;
     Recipe mRecipe;
-    Intent mIntent;
 
     public ListRemoteViewsFactory(Context mContext, Intent mIntent) {
         this.mContext = mContext;
-        this.mIntent = mIntent;
         Log.d("Widget update: ", "ListRemoteViewsFactory constructor");
         if (mIntent.hasExtra(BUNDLE_EXTRA)){
             Bundle bundle = mIntent.getBundleExtra(BUNDLE_EXTRA);
@@ -45,13 +43,8 @@ public class ListRemoteViewsFactory implements RemoteViewsService.RemoteViewsFac
         }
     }
 
-    public void swapRecipe(Recipe recipe){
-        mRecipe = recipe;
-    }
-
     @Override
     public void onCreate() {
-        Log.d("Widget update: ", "ListRemoteViewsFactory onCreate()");
     }
 
     //called on start and when notifyAppWidgetViewDataChanged is called
