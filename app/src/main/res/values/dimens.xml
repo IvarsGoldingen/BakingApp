@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="card_item_radius">16dp</dimen>
+    <dimen name="app_padding">5dp</dimen>
+    <dimen name="list_item_image_size">48dp</dimen>
+    <dimen name="list_item_title_text_size">20sp</dimen>
+    <dimen name="information_text_size">18sp</dimen>
+    <dimen name="list_item_image_text_margin">10dp</dimen>
+    <dimen name="back_forward_button_size">48dp</dimen>
+    <dimen name="back_fwd_button_margin">10dp</dimen>
+    <dimen name="title_information_margin">10dp</dimen>
+    <dimen name="error_message_text_size">22sp</dimen>
+
+    <!--
+Refer to App Widget Documentation for margin information
+http://developer.android.com/guide/topics/appwidgets/index.html#CreatingLayout
+    -->
+    <dimen name="widget_margin">8dp</dimen>
+    <dimen name="empty_widget_text_size">24sp</dimen>
+</resources>
