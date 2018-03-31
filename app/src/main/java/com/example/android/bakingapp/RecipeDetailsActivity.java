@@ -10,17 +10,20 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.example.android.bakingapp.RecipieObjects.Ingredient;
 import com.example.android.bakingapp.RecipieObjects.Recipe;
 import com.example.android.bakingapp.RecipieObjects.Step;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
+
+import butterknife.BindView;
 
 /**
  * Details activity displays details of one recipe
@@ -39,8 +42,13 @@ implements RecipeDetailsFragment.OnItemClickListener{
     //save instance keys
     private static final String SAVE_INSTANCE_RECEIVED_RECIPE = "received_recipe";
 
+    @Nullable
+    @BindView(R.id.step_ingredient_list)
+    FrameLayout tabletFl;
+
     private Recipe receivedRecipe;
     private Toast mToast;
+    private boolean openInTablet;
 
     //This gets called when the widget is clicked while the activity is  at the top of the activity stack
     //in that case onCreate is not called, so we need to set the UI to the correct Recipe
@@ -62,18 +70,36 @@ implements RecipeDetailsFragment.OnItemClickListener{
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recipe_detail_view);
+
+        openInTablet = getResources().getBoolean(R.bool.open_in_tablet);
+
         //Create new fragments if there is no previously saved state
-        if(savedInstanceState == null){
+        if (savedInstanceState == null) {
             Intent starterIntent = getIntent();
             receivedRecipe = (Recipe)starterIntent.getSerializableExtra(INTENT_EXTRA_RECIPE_KEY);
             setTitle(receivedRecipe.getName());
 
-            if (starterIntent.hasExtra(INTENT_EXTRA_INGREDIENT_ITEM)){
+            if (openInTablet) {
+                //Enable up navigation on a tablet
+                if (getActionBar() != null) {
+                    getActionBar().setDisplayHomeAsUpEnabled(true);
+                }
+                //In a tablet both the ingredient and details fragmnents must be opened
                 startIngredientsFragment(starterIntent.getIntExtra(INTENT_EXTRA_INGREDIENT_ITEM,
                         NO_INGREDIENT_POSITION_SPECIFIED));
-            } else {
                 startDetailsFragment();
+            } else {
+                //On a phone only 1 fragment has to be opened
+                if (starterIntent.hasExtra(INTENT_EXTRA_INGREDIENT_ITEM)) {
+                    //start the ingredients fragment if the call is from the widget
+                    startIngredientsFragment(starterIntent.getIntExtra(INTENT_EXTRA_INGREDIENT_ITEM,
+                            NO_INGREDIENT_POSITION_SPECIFIED));
+                } else {
+                    //create the main details fragment otherwise
+                    startDetailsFragment();
+                }
             }
+
         }
     }
 
@@ -90,10 +116,11 @@ implements RecipeDetailsFragment.OnItemClickListener{
         switch (id){
             case R.id.action_set_on_widget:
                 setCurrentRecipeOnWidget();
-                showToast(receivedRecipe.getName() + " ingredients successfully set in widget");
+                showToast(receivedRecipe.getName() + getString(R.string.wiget_load_text));
+                break;
+            case android.R.id.home:
                 break;
             default:
-                showToast(getString(R.string.widget_add_error));
                 break;
         }
 
@@ -103,16 +130,16 @@ implements RecipeDetailsFragment.OnItemClickListener{
     private void setCurrentRecipeOnWidget(){
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor preferenceEditor = sharedPreferences.edit();
-        preferenceEditor.putInt(getString(R.string.preference_widget_recipe_id), receivedRecipe.getId());
+        Gson gson = new Gson();
+        String json = gson.toJson(receivedRecipe);
+        preferenceEditor.putString(getString(R.string.json_recipe_object), json);
         preferenceEditor.apply();
 
-        Log.d("Widget update: ", "setCurrentRecipeOnWidget id:" + receivedRecipe.getId());
-
+        //notify the widget that data has changed
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
         int [] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(this, IngredientsWidgetProvider.class));
-        IngredientsWidgetProvider.updateRecipeWidgets(this, appWidgetManager,
-                appWidgetIds,receivedRecipe);
-        //appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widget_list_view);
+        IngredientsWidgetProvider.updateRecipeWidgets(this, appWidgetManager, appWidgetIds, receivedRecipe.getName());
+        appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widget_list_view);
     }
 
     @Override
@@ -174,8 +201,14 @@ implements RecipeDetailsFragment.OnItemClickListener{
         detailsFragment.setArguments(args);
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.add(R.id.recipe_detail_container, detailsFragment)
-                .commit();
+        if (openInTablet) {
+            fragmentTransaction.add(R.id.step_ingredient_list, detailsFragment)
+                    .commit();
+        } else {
+            fragmentTransaction.add(R.id.recipe_detail_container, detailsFragment)
+                    .commit();
+        }
+
     }
 
     /*

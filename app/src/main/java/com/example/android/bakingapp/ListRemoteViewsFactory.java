@@ -2,18 +2,16 @@ package com.example.android.bakingapp;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
-import com.example.android.bakingapp.RecipieObjects.Ingredient;
 import com.example.android.bakingapp.RecipieObjects.Recipe;
-
-import java.util.ArrayList;
+import com.google.gson.Gson;
 
 /**
  * This class is used to get the data for the widget
@@ -25,22 +23,12 @@ public class ListRemoteViewsFactory implements RemoteViewsService.RemoteViewsFac
 
     private static final String INTENT_EXTRA_INGREDIENT_ITEM = "ingredient_item_position";
     private static final String INTENT_EXTRA_RECIPE_KEY = "recipe_object";
-    private static final String BUNDLE_EXTRA = "bundle";
-    private static final String INGREDIENTS_LIST_EXTRA = "ingredientsList";
 
     Context mContext;
     Recipe mRecipe;
 
-    public ListRemoteViewsFactory(Context mContext, Intent mIntent) {
+    public ListRemoteViewsFactory(Context mContext) {
         this.mContext = mContext;
-        Log.d("Widget update: ", "ListRemoteViewsFactory constructor");
-        if (mIntent.hasExtra(BUNDLE_EXTRA)){
-            Bundle bundle = mIntent.getBundleExtra(BUNDLE_EXTRA);
-            if (bundle.containsKey(INGREDIENTS_LIST_EXTRA)){
-                mRecipe = (Recipe)bundle.getSerializable(INGREDIENTS_LIST_EXTRA);
-                Log.d("Widget update: ", "ListRemoteViewsFactory id:" + mRecipe.getId());
-            }
-        }
     }
 
     @Override
@@ -50,6 +38,10 @@ public class ListRemoteViewsFactory implements RemoteViewsService.RemoteViewsFac
     //called on start and when notifyAppWidgetViewDataChanged is called
     @Override
     public void onDataSetChanged() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
+        Gson gson = new Gson();
+        String json = sharedPreferences.getString(mContext.getString(R.string.json_recipe_object), "");
+        mRecipe = gson.fromJson(json, Recipe.class);
     }
 
     @Override

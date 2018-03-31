@@ -3,20 +3,42 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="@dimen/widget_margin">
-    <ListView
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/widget_list_view">
-    </ListView>
-    <TextView
-        android:layout_gravity="center"
-        android:id="@+id/empty_widget_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:background="@color/colorPrimaryLight"
-        android:text="@string/no_ingredients_to_display"
-        android:textColor="@color/text_color"
-        android:textSize="@dimen/empty_widget_text_size"
-        android:textStyle="bold"/>
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/widget_title_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorPrimary"
+            android:text="@string/widgeet_title"
+            android:textColor="@color/text_color"
+            android:textSize="@dimen/widget_title_text_size" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <ListView
+                android:id="@+id/widget_list_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"></ListView>
+
+            <TextView
+                android:id="@+id/empty_widget_text"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/colorPrimaryLight"
+                android:gravity="center"
+                android:text="@string/no_ingredients_to_display"
+                android:textColor="@color/text_color"
+                android:textSize="@dimen/information_text_size"
+                android:textStyle="bold" />
+        </FrameLayout>
+    </LinearLayout>
+
 </FrameLayout>

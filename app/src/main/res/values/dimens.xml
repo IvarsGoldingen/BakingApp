@@ -11,10 +11,12 @@
     <dimen name="title_information_margin">10dp</dimen>
     <dimen name="error_message_text_size">22sp</dimen>
 
+    <dimen name="widget_title_text_size">22sp</dimen>
     <!--
 Refer to App Widget Documentation for margin information
 http://developer.android.com/guide/topics/appwidgets/index.html#CreatingLayout
     -->
     <dimen name="widget_margin">8dp</dimen>
     <dimen name="empty_widget_text_size">24sp</dimen>
+    <dimen name="no_video_tablet_image_size">300dp</dimen>
 </resources>

@@ -5,14 +5,12 @@ import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
-import android.util.Log;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.widget.RemoteViews;
 
-import com.example.android.bakingapp.RecipieObjects.Ingredient;
 import com.example.android.bakingapp.RecipieObjects.Recipe;
-
-import java.util.ArrayList;
+import com.google.gson.Gson;
 
 /**
  * Implementation of App Widget functionality.
@@ -20,11 +18,8 @@ import java.util.ArrayList;
  */
 public class IngredientsWidgetProvider extends AppWidgetProvider {
 
-    private static final String BUNDLE_EXTRA = "bundle";
-    private static final String INGREDIENTS_LIST_EXTRA = "ingredientsList";
-
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
-                                int appWidgetId, Recipe receivedRecipe) {
+                                int appWidgetId, String widgetTitle) {
         // Construct the RemoteViews object
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.ingredients_widget);
 
@@ -36,14 +31,6 @@ public class IngredientsWidgetProvider extends AppWidgetProvider {
 
         //Add the list of ingredients to the intent
         Intent listIntent = new Intent(context, WidgetService.class);
-        if (receivedRecipe != null){
-            Log.d("Widget update: ", "updateAppWidget id:" + receivedRecipe.getId());
-
-            //The list must be put into a bundle to be passed through multiple intents
-            Bundle extrasBundle = new Bundle();
-            extrasBundle.putSerializable(INGREDIENTS_LIST_EXTRA, receivedRecipe);
-            listIntent.putExtra(BUNDLE_EXTRA, extrasBundle);
-        }
         //Set the Widget service intent to act as the adapter for the listview
         views.setRemoteAdapter(R.id.widget_list_view, listIntent);
 
@@ -54,6 +41,8 @@ public class IngredientsWidgetProvider extends AppWidgetProvider {
         //The template is used so a seperate pendingIntent does not need to be set on each view
         views.setPendingIntentTemplate(R.id.widget_list_view, detailPendingIntent);
 
+        views.setTextViewText(R.id.widget_title_text, widgetTitle);
+
         //Set the textview to show when there is no data
         views.setEmptyView(R.id.widget_list_view, R.id.empty_widget_text);
         //Instruct the widget manager to update the widget
@@ -61,9 +50,9 @@ public class IngredientsWidgetProvider extends AppWidgetProvider {
     }
 
     public static void updateRecipeWidgets(Context context, AppWidgetManager appWidgetManager,
-                                           int[] widgetIds, Recipe selectedRecipe){
+                                           int[] widgetIds, String recipeName) {
         for (int widgetId : widgetIds){
-            updateAppWidget(context, appWidgetManager, widgetId, selectedRecipe);
+            updateAppWidget(context, appWidgetManager, widgetId, recipeName);
         }
     }
 
@@ -71,10 +60,18 @@ public class IngredientsWidgetProvider extends AppWidgetProvider {
     //CALLED WHEN NEW WIDGET IS CREATED OR WHEN THE UPDATE PERIOD EXPIRES
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-        Log.d("Widget update: ", "Provider onUpdate()");
         // There may be multiple widgets active, so update all of them
+        String widgetTitle = context.getString(R.string.default_widget_title);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        if (sharedPreferences.contains(context.getString(R.string.json_recipe_object))) {
+            Gson gson = new Gson();
+            String json = sharedPreferences.getString(context.getString(R.string.json_recipe_object), "");
+            Recipe recipe = gson.fromJson(json, Recipe.class);
+            widgetTitle = recipe.getName();
+        }
+
         for (int appWidgetId : appWidgetIds) {
-            updateAppWidget(context, appWidgetManager, appWidgetId, null);
+            updateAppWidget(context, appWidgetManager, appWidgetId, widgetTitle);
         }
     }
 

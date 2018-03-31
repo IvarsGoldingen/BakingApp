@@ -11,7 +11,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".MainActivity"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -21,7 +23,11 @@
         <!-- singleTop does not allow he activity to be recreated when user returns to the app -->
         <activity
             android:name=".RecipeDetailsActivity"
-            android:launchMode="singleTop" />
+            android:launchMode="singleTop">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
 
         <!--Broadcast receiver for the widget-->
         <receiver android:name=".IngredientsWidgetProvider">

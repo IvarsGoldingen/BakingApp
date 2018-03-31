@@ -1,7 +1,6 @@
 package com.example.android.bakingapp;
 
 import android.content.res.Configuration;
-import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -10,12 +9,9 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
-import android.util.Log;
-import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -57,7 +53,10 @@ public class StepDetailsFragment extends Fragment implements ExoPlayer.EventList
     private static final String MEDIA_SESSION_TAG = "media_session_tag";
     //save instance keys
     private static final String SAVE_INSTANCE_STEP_NUMBER = "step_number";
-
+    private static final String SAVE_INSTANCE_PLAYER_POS = "player_position";
+    private static final long NO_POSITION_SAVED = -1;
+    //a media session is needed so the exoPlayer can be controlled from external devices
+    private static MediaSessionCompat mMediaSession;
     @BindView(R.id.exo_player_view)
     SimpleExoPlayerView exoPlayerView;
     @BindView(R.id.no_step_video_iv)
@@ -71,29 +70,34 @@ public class StepDetailsFragment extends Fragment implements ExoPlayer.EventList
     @Nullable
     @BindView(R.id.landsscape_layout_sv)
     ScrollView landscapeSv;
-
     private ArrayList<Step> mSteps;
     //used for showing the correct step
     private int mCurrentStepNumber;
     private SimpleExoPlayer mExoPlayer;
-    //a media session is needed so the exoPlayer can be controlled from external devices
-    private static MediaSessionCompat mMediaSession;
     private PlaybackStateCompat.Builder mStateBuilder;
+    //Variable to save exoPlayer position
+    private long exoplayerPosition = NO_POSITION_SAVED;
+
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.fragment_step_detail_view, null, false);
-        Log.d(TAG, "onCreateView");
         ButterKnife.bind(this, rootView);
 
-        setupUiFromOrientation();
+        //the UI change from orientation only on a phone
+        if (!getResources().getBoolean(R.bool.open_in_tablet)) {
+            setupUiFromOrientation();
+        }
 
         mSteps = (ArrayList)getArguments().getSerializable(INTENT_EXTRA_STEPS_KEY);
         if (savedInstanceState == null){
             mCurrentStepNumber = getArguments().getInt(INTENT_EXTRA_STEP_SELECTED_KEY);
         } else {
             mCurrentStepNumber = savedInstanceState.getInt(SAVE_INSTANCE_STEP_NUMBER);
+            if (savedInstanceState.containsKey(SAVE_INSTANCE_PLAYER_POS)) {
+                exoplayerPosition = savedInstanceState.getLong(SAVE_INSTANCE_PLAYER_POS);
+            }
         }
 
         stepDescriptionTv.setText(mSteps.get(mCurrentStepNumber).getDescription());
@@ -131,7 +135,9 @@ public class StepDetailsFragment extends Fragment implements ExoPlayer.EventList
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(SAVE_INSTANCE_STEP_NUMBER, mCurrentStepNumber);
-
+        if (exoplayerPosition != NO_POSITION_SAVED) {
+            outState.putLong(SAVE_INSTANCE_PLAYER_POS, exoplayerPosition);
+        }
     }
 
 
@@ -191,6 +197,7 @@ public class StepDetailsFragment extends Fragment implements ExoPlayer.EventList
             setUpMediaSession();
             initializePlayer(stepVideoUrl);
         } else {
+            releasePlayer();
             exoPlayerView.setVisibility(View.GONE);
             noVideoIv.setVisibility(View.VISIBLE);
         }
@@ -218,6 +225,9 @@ public class StepDetailsFragment extends Fragment implements ExoPlayer.EventList
         MediaSource mediaSource = buildMediaSource(videoUri);
         mExoPlayer.prepare(mediaSource,true,false);
         mExoPlayer.setPlayWhenReady(true);
+        if (exoplayerPosition != NO_POSITION_SAVED) {
+            mExoPlayer.seekTo(exoplayerPosition);
+        }
     }
 
     private MediaSource buildMediaSource(Uri videoUri) {
@@ -254,29 +264,10 @@ public class StepDetailsFragment extends Fragment implements ExoPlayer.EventList
         }
     }
 
-
-
-    //these methods will be called by external clients on the media session
-    //these methods are used to interface with the exoplayer
-    private class MySessionCallback extends MediaSessionCompat.Callback{
-        @Override
-        public void onPlay() {
-            mExoPlayer.setPlayWhenReady(true);
-        }
-
-        @Override
-        public void onPause() {
-            mExoPlayer.setPlayWhenReady(false);
-        }
-
-        @Override
-        public void onSkipToPrevious() {
-            mExoPlayer.seekTo(0);
-        }
-    }
-
     private void releasePlayer(){
         if (mExoPlayer != null){
+            //save position in variable so it can be saved in onSaveInstanceState
+            exoplayerPosition = mExoPlayer.getCurrentPosition();
             mExoPlayer.stop();
             mExoPlayer.release();
             mExoPlayer = null;
@@ -286,6 +277,7 @@ public class StepDetailsFragment extends Fragment implements ExoPlayer.EventList
     @Override
     public void onPause() {
         super.onPause();
+        //release player so playback does not continue after app is no longer visible
         releasePlayer();
     }
 
@@ -304,7 +296,6 @@ public class StepDetailsFragment extends Fragment implements ExoPlayer.EventList
     public void onResume() {
         super.onResume();
         setUpUiWithStepContent();
-        //TODO: possibly save video stop time and restore
     }
 
     @Override
@@ -346,5 +337,24 @@ public class StepDetailsFragment extends Fragment implements ExoPlayer.EventList
     @Override
     public void onPositionDiscontinuity() {
 
+    }
+
+    //these methods will be called by external clients on the media session
+    //these methods are used to interface with the exoplayer
+    private class MySessionCallback extends MediaSessionCompat.Callback {
+        @Override
+        public void onPlay() {
+            mExoPlayer.setPlayWhenReady(true);
+        }
+
+        @Override
+        public void onPause() {
+            mExoPlayer.setPlayWhenReady(false);
+        }
+
+        @Override
+        public void onSkipToPrevious() {
+            mExoPlayer.seekTo(0);
+        }
     }
 }

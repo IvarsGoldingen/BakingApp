@@ -5,8 +5,13 @@
     <string name="download_error_text">Unable to download data.\nCheck internet connection and restart the app</string>
     <string name="appwidget_text">Baking app widget</string>
     <string name="add_widget">Add widget</string>
-    <string name="no_ingredients_to_display">No ingredients to display</string>
+    <string name="no_ingredients_to_display">No ingredients to display. Set a recipe for the widget in the baking app</string>
     <string name="set_on_widget">Set current recipe on widget</string>
     <string name="widget_add_error">Error with adding to widget</string>
     <string name="preference_widget_recipe_id">widget_recipe_id</string>
+    <string name="json_recipe_object">json_recipe_object</string>
+    <string name="widgeet_title">Baking app</string>
+    <string name="default_widget_title">Baking app</string>
+    <string name="wiget_load_text">ingredients successfully set in widget</string>
+    <string name="failed_to_connect">Failed to connect</string>
 </resources>
